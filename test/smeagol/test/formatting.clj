@@ -1,5 +1,6 @@
 (ns smeagol.test.formatting
   (:require [clojure.test :refer :all]
+            [smeagol.sample] ;; TODO autorequire
             [smeagol.formatting :refer [local-links no-text-error]]))
 
 (deftest test-local-links
