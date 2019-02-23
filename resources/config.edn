@@ -36,6 +36,9 @@
                          "mermaid"      smeagol.formatting/process-mermaid
                          "backticks"    smeagol.formatting/process-backticks
                          "test"         smeagol.formatting/process-test}
+  :test-namespaces      {"smeagol.sample" #:smeagol.testing.execution{:type :local}
+                         "smeagol-demo.ttl" #:smeagol.testing.execution{:host "localhost" :port 7888 :type :remote :timeout 1000}
+                         }
   :log-level            :info           ;; the minimum logging level; one of
                                         ;; :trace :debug :info :warn :error :fatal
   :passwd               "resources/passwd"
