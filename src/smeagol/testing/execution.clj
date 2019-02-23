@@ -10,7 +10,7 @@
 
 
 (defn- do-remote-execute [{:keys [fn-name in] :as params}]
-  (let [{::keys [host port timeout]} params]
+  (let [{::keys [host port timeout] :or {timeout 1000 host "localhost"}} params]
     (try
       (with-open [conn (nrepl/connect :host host :port port)]
         (-> (nrepl/client conn timeout)
