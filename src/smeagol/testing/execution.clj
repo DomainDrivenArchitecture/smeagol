@@ -1,6 +1,7 @@
 (ns smeagol.testing.execution
   (:require [clojure.edn :as edn]
-            [nrepl.core :as nrepl]))
+            [nrepl.core :as nrepl])
+  (:import [java.net ConnectException]))
 
 
 (defn- call-with-require [fn-name in]
@@ -10,10 +11,13 @@
 
 (defn- do-remote-execute [{:keys [fn-name in] :as params}]
   (let [{::keys [host port timeout]} params]
-    (with-open [conn (nrepl/connect :host host :port port)]
-      (-> (nrepl/client conn timeout)
-          (nrepl/message {:op :eval :code (pr-str (call-with-require fn-name in))})
-          nrepl/combine-responses))))
+    (try
+      (with-open [conn (nrepl/connect :host host :port port)]
+        (-> (nrepl/client conn timeout)
+            (nrepl/message {:op :eval :code (pr-str (call-with-require fn-name in))})
+            nrepl/combine-responses))
+      (catch ConnectException e {:status #{"eval-error"}
+                                 :err "Connection refused"}))))
 
 
 (defmulti execute ::type)
