@@ -35,7 +35,7 @@
   (let [ns-name (namespace fn-name)]
     (if-let [ns-config (-> config :test-namespaces (get ns-name))]
       (merge ns-config params)
-      {:error (str "Namespace: " ns-name " is not listed: "
+      {:error (str "Namespace: " (pr-str ns-name) " is not listed: "
                    (-> config :test-namespaces keys))})))
 
 
