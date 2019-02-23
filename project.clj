@@ -18,6 +18,7 @@
                  [lib-noir "0.9.9" :exclusions [org.clojure/tools.reader]]
                  [markdown-clj "0.9.99" :exclusions [com.keminglabs/cljx]]
                  [noir-exception "0.2.5"]
+                 [nrepl "0.6.0"]
                  [org.clojars.simon_brooke/internationalisation "1.0.3"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/core.memoize "0.5.9"]
