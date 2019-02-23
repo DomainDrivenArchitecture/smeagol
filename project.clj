@@ -20,7 +20,7 @@
                  [noir-exception "0.2.5"]
                  [nrepl "0.6.0"]
                  [org.clojars.simon_brooke/internationalisation "1.0.3"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.10.0"]
                  [org.clojure/core.memoize "0.5.9"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.4.0"]
