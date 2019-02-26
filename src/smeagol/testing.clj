@@ -1,20 +1,17 @@
 (ns smeagol.testing
-  (:require [clojure.string :as s]
-            [clojure.edn :as edn]))
+  (:require [clojure.string :as string]
+            [clojure.edn :as edn]
+            [smeagol.configuration :refer [config]]
+            [smeagol.testing.execution :refer [execute]]))
 
-(defn- execute [{:keys [fn in]}]
-  (try (let [result (apply fn in)]
-         {:result result})
-       (catch Exception e
-         {:error (.getMessage e)})))
-
-(defn do-test [{:keys [fn in out] :as params}]
+(defn do-test [{:keys [out] :as params}]
   (let [{:keys [error result]} (execute params)]
     (if error
       {:result :error :error error}
       (if (= result out)
         {:result :ok}
         {:result :failure :expected out :actual result}))))
+
 
 (defn- parse-value [^String line]
   (try
@@ -24,34 +21,26 @@
       {:line line :error (.getMessage e)})))
 
 
-(defn- parse-values [texts]
-  (reduce (fn [acc text]
-            (let [{:keys [value error] :as parsed} (parse-value text)]
-              (if error
-                (reduced parsed)
-                (update-in acc [:values] conj value))))
-          {:values []}
-          texts))
-
-
 (defn parse [^String text]
-  (let [lines (s/split-lines text)]
-    (if (-> lines count (>= 3))
-      (let [[sym & rest] lines]
-        (if-let [fn (-> sym s/trim symbol resolve)] ;; TODO: require ns
-          (let [{:keys [values error line] :as x} (parse-values rest)]
-            (if error
-              {:error (str "Failed parsing line: " line " due: " error)}
-              (let [out (last values)
-                    in (butlast values)]
-                {:fn fn :out out :in in :text text})))
-          {:error (str "No test found with name: " (pr-str sym)) :text text}))
-      {:error (str "There shoud be at least 3 lines (test name, input, output), given: " (count lines))
-       :text text})))
+  (let [[sym rest] (string/split text #"\r?\n" 2)
+        fn-name (-> sym string/trim symbol)]
+    (let [{:keys [value error line] :as x} (parse-value (or rest ""))]
+      (if error
+        {:error (str "Failed parsing line due: " error)}
+        (let [{:keys [in out] :or {in [] out nil}} value]
+          {:fn-name fn-name :out out :in in :text text})))))
+
+
+(defn whitelist-namespace [{:keys [fn-name] :as params}]
+  (let [ns-name (namespace fn-name)]
+    (if-let [ns-config (-> config :test-namespaces (get ns-name))]
+      (merge ns-config params)
+      {:error (str "Namespace: " (pr-str ns-name) " is not listed: "
+                   (-> config :test-namespaces keys))})))
 
 
 (defn process [^String text ^Integer index]
-  (let [{:keys [error] :as params} (parse text)]
+  (let [{:keys [error] :as params} (-> text parse whitelist-namespace)]
     (if error
       (str "<pre class=\"test-result error\">" (pr-str params) "</pre><pre>" text "</pre>")
       (let [{:keys [result] :as test-result} (do-test params)]
