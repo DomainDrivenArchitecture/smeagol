@@ -1,7 +1,20 @@
 (ns smeagol.test.testing
   (:require [clojure.test :refer :all]
+            [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [nrepl.server :refer [start-server]]
             [smeagol.testing :refer [parse whitelist-namespace do-test]]))
+
+(def config (-> "public/content/example.edn" io/resource slurp edn/read-string))
+(def text "fn-name\n{:in [#include \"example.edn\"]}")
+
+(deftest test-read-with-aero
+  (is (=
+       {:fn-name 'fn-name
+        :in [config]
+        :out nil
+        :text text}
+       (parse text))))
 
 (defn eval-2 [x] (println x) (str x))
 (defmacro with-nrepl [port & body]
@@ -11,7 +24,7 @@
 
 (deftest test-inalid-input
   (are [match input] (re-find match (-> input parse :error))
-    #"Failed parsing line.*EOF while reading" "smeagol.sample/pow\r\n{"))
+    #"Failed parsing line.*Config error on line" "smeagol.sample/pow\r\n{"))
 
 
 (deftest test-whitelisting-input
