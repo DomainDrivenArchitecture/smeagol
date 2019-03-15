@@ -1,8 +1,28 @@
 (ns smeagol.testing
   (:require [clojure.string :as string]
             [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [aero.core :as aero]
             [smeagol.configuration :refer [config]]
-            [smeagol.testing.execution :refer [execute]]))
+            [smeagol.testing.execution :refer [execute]])
+  (:import [java.io StringReader]
+           [clojure.lang LineNumberingPushbackReader]))
+
+(defn string->input-stream [s]
+  (-> s .getBytes io/input-stream))
+
+(defn smeagol-include-resolver [x include]
+  (let [included-file (io/file (:content-dir config) include)]
+    (if (.exists included-file)
+      included-file
+      ;; also expects an input-stream
+      (-> {::not-found include} pr-str string->input-stream))))
+
+(defn read-string-with-aero
+  "In addition to aero.core/read-config, which accepts only input-stream"
+  [source-string]
+  (aero/read-config (string->input-stream source-string)
+                    {:resolver smeagol-include-resolver}))
 
 (defn do-test [{:keys [out] :as params}]
   (let [{:keys [error result]} (execute params)]
@@ -15,7 +35,7 @@
 
 (defn- parse-value [^String line]
   (try
-    (let [value (edn/read-string line)]
+    (let [value (read-string-with-aero line)]
       {:line line :value value})
     (catch Exception e
       {:line line :error (.getMessage e)})))
