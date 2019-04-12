@@ -11,7 +11,7 @@
 (defn string->input-stream [s]
   (-> s .getBytes io/input-stream))
 
-(defn smeagol-include-resolver [x include]
+(defn smeagol-include-resolver [_ include]
   (let [included-file (io/file (:content-dir config) include)]
     (if (.exists included-file)
       included-file
@@ -23,6 +23,25 @@
   [source-string]
   (aero/read-config (string->input-stream source-string)
                     {:resolver smeagol-include-resolver}))
+
+(defn read-tagged-aero-config
+  ([source given-opts]
+   (let [opts (merge {:resolver #(io/resource %2)} given-opts {:source source})
+         tag-fn (partial aero/reader opts)]
+     (-> source
+         (aero/resolve-refs tag-fn)
+         (#'aero/resolve-tag-wrappers tag-fn)
+         (#'aero/realize-deferreds))))
+  ([source] (read-tagged-aero-config source {})))
+
+(defmacro with-aero [form]
+  `(let [prev-default-data-reader-fn# *default-data-reader-fn*]
+     (try (set! *default-data-reader-fn* #'aero/tag-wrapper)
+          (read-tagged-aero-config ~form)
+          (catch Exception ~'e
+            (do
+              (set! *default-data-reader-fn* prev-default-data-reader-fn#)
+              (throw ~'e))))))
 
 (defn do-test [{:keys [out] :as params}]
   (let [{:keys [error result]} (execute params)]
