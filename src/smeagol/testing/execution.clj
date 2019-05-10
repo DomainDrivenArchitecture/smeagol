@@ -3,7 +3,7 @@
             [nrepl.core :as nrepl])
   (:import [java.net ConnectException]))
 
-
+;; TODO: Review 2019_03_29 jem: make fn more symetric compared to do-remote-execute
 (defn- call-with-require [fn-name in]
   (let [ns-sym (some-> fn-name namespace symbol)]
     `(do ~(when ns-sym `(require (quote ~ns-sym))) (apply ~fn-name ~in))))
@@ -35,4 +35,3 @@
          {:result result})
        (catch Exception e
          {:error (.getMessage e)})))
-
