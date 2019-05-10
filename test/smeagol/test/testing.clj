@@ -42,13 +42,13 @@
 (deftest test-local-executon
   (are [result input] (= result (-> input parse (merge local-ns-config) do-test))
     {:result :failure, :expected 15, :actual 16} failure
-    {:result :ok} success))
+    {:result :ok :expected 15 :actual 15} success))
 
 (deftest test-remote-executon
   (with-nrepl port
     (are [result input] (= result (-> input parse (merge remote-ns-config) do-test))
       {:result :failure, :expected 15, :actual 16} failure
-      {:result :ok} success)))
+      {:result :ok :expected 15 :actual 15} success)))
 
 (deftest test-remote-connection-refused
   (are [result input] (= result (-> input parse (merge remote-ns-config) do-test))
