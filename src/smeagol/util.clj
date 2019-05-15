@@ -7,7 +7,7 @@
             [noir.session :as session]
             [scot.weft.i18n.core :as i18n]
             [smeagol.authenticate :as auth]
-            [smeagol.configuration :refer [config]]
+            ;; [smeagol.configuration :refer [config]]
             [smeagol.formatting :refer [md->html]]
             [taoensso.timbre :as timbre]))
 
@@ -35,10 +35,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(def start-page
+(defn start-page [config]
   (:start-page  config))
 
-(def content-dir
+(defn content-dir [config]
   (or
     (:content-dir config)
     (cjio/file (io/resource-path) "content")))
@@ -46,35 +46,38 @@
 
 (defn standard-params
   "Return a map of standard parameters to pass to the template renderer."
-  [request]
+  [{:keys [smeagol/config smeagol/formatters] :as request}]
   (let [user (session/get :user)]
     {:user user
      :admin (auth/get-admin user)
-     :side-bar (md->html (slurp (cjio/file content-dir "_side-bar.md")))
-     :header (md->html (slurp (cjio/file content-dir "_header.md")))
+     :side-bar (md->html formatters (slurp (cjio/file (content-dir config) "_side-bar.md")))
+     :header (md->html formatters (slurp (cjio/file (content-dir config) "_header.md")))
      :version (System/getProperty "smeagol.version")}))
 
 
 (defn- raw-get-messages
   "Return the most acceptable messages collection we have given the
   `Accept-Language` header in this `request`."
-  [request]
-  (let [specifier ((:headers request) "accept-language")
-        messages (try
-                   (i18n/get-messages specifier "i18n" "en-GB")
-                   (catch Exception any
-                     (timbre/error
-                       any
-                       (str
-                         "Failed to parse accept-language header "
-                         specifier))
-                     {}))]
-    (merge
-      messages
-      config)))
+  [header]
+  (try
+    (i18n/get-messages header "i18n" "en-gb")
+    (catch Exception any
+      (timbre/error
+       any
+       (str
+        "Failed to parse accept-language header "
+        (pr-str header)))
+      {})))
 
 
-(def get-messages (memoize raw-get-messages))
+;; A full http header is still a bad cache key,
+;; but instaparse is maybe too slow here
+;; TODO: lru cache
+(def get-messages-by-header (memoize raw-get-messages))
+
+(defn get-messages [{:keys [headers smeagol/config] :as request}]
+  (merge (get-messages-by-header (headers "accept-language"))
+         config))
 
 
 (defn get-message
@@ -83,9 +86,7 @@
    `message-key`."
   ([message-key request]
    (get-message message-key message-key request))
-  ([message-key default request]
-   (let [messages (get-messages request)]
-     (if
-       (map? messages)
-       (or (messages message-key) default)
-       default))))
+  ([message-key default {:keys [smeagol/config] :as request}]
+   (or (config message-key)
+       (let [messages (get-messages request)]
+         (get messages message-key default)))))

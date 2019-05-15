@@ -11,6 +11,7 @@
             [noir.response :as response]
             [noir.util.route :as route]
             [noir.session :as session]
+            [integrant.core :as ig]
             [smeagol.authenticate :as auth]
             [smeagol.diff2html :as d2h]
             [smeagol.formatting :refer [md->html]]
@@ -51,14 +52,14 @@
 (defn process-source
   "Process `source-text` and save it to the specified `file-path`, committing it
   to Git and finally redirecting to wiki-page."
-  [params suffix request]
+  [params suffix {:keys [smeagol/config] :as request}]
   (timbre/trace (format "process-source: '%s'" request))
   (let [source-text (:src params)
         page (:page params)
         file-name (str page suffix)
-        file-path (cjio/file util/content-dir file-name)
+        file-path (cjio/file (util/content-dir config) file-name)
         exists? (.exists (cjio/as-file file-path))
-        git-repo (hist/load-or-init-repo util/content-dir)
+        git-repo (hist/load-or-init-repo (util/content-dir config))
         user (session/get :user)
         email (auth/get-email user)
         summary (format "%s: %s" user (or (:summary params) "no summary"))]
@@ -80,14 +81,13 @@
   and that would have been neat, but I couldn't see how to establish security if that were done."
   ([request]
    (edit-page request (util/get-message :default-page-title request) ".md" "edit.html" "_edit-side-bar.md"))
-  ([request default suffix template side-bar]
+  ([{:keys [smeagol/config smeagol/formatters] :as request} default suffix template side-bar]
    (or
-     (show-sanity-check-error)
      (let [params (keywordize-keys (:params request))
            src-text (:src params)
            page (or (:page params) default)
            file-name (str page suffix)
-           file-path (cjio/file util/content-dir file-name)
+           file-path (cjio/file (util/content-dir config) file-name)
            exists? (.exists (cjio/as-file file-path))
            user (session/get :user)]
        (if-not
@@ -101,7 +101,9 @@
                             (merge (util/standard-params request)
                                    {:title (str (util/get-message :edit-title-prefix request) " " page)
                                     :page page
-                                    :side-bar (md->html (slurp (cjio/file util/content-dir side-bar)))
+                                    :side-bar (md->html
+                                               formatters
+                                               (slurp (cjio/file (util/content-dir config) side-bar)))
                                     :content (if exists? (slurp file-path) "")
                                     :exists exists?})))))))
 
@@ -112,24 +114,15 @@
   (edit-page request "stylesheet" ".css" "edit-css.html" "_edit-side-bar.md"))
 
 
-(def md-include-system
-  (component/start
-    (component/system-map
-      :resolver (resolve/new-resolver util/content-dir)
-      :includer (component/using
-                  (include/new-includer)
-                  [:resolver]))))
-
 (defn wiki-page
   "Render the markdown page specified in this `request`, if any. If none found, redirect to edit-page"
-  [request]
+  [{:keys [smeagol/resolver smeagol/config smeagol/formatters] :as request}]
   (timbre/trace (format "wiki-page: '%s'" request))
   (or
-    (show-sanity-check-error)
     (let [params (keywordize-keys (:params request))
-          page (or (:page params) util/start-page (util/get-message :default-page-title "Introduction" request))
+          page (or (:page params) (util/start-page config) (util/get-message :default-page-title "Introduction" request))
           file-name (str page ".md")
-          file-path (cjio/file util/content-dir file-name)
+          file-path (cjio/file (util/content-dir config) file-name)
           exists? (.exists (clojure.java.io/as-file file-path))]
       (cond exists?
             (do
@@ -139,8 +132,9 @@
                                     {:title page
                                      :page page
                                      :content (md->html
+                                                formatters
                                                 (include/expand-include-md
-                                                  (:includer md-include-system)
+                                                  (include/new-includer resolver)
                                                   (slurp file-path)))
                                      :editable true})))
             true (response/redirect (str "/edit?page=" page))))))
@@ -149,11 +143,11 @@
 (defn history-page
   "Render the history for the markdown page specified in this `request`,
   if any. If none, error?"
-  [request]
+  [{:keys [smeagol/config] :as request}]
   (let [params (keywordize-keys (:params request))
         page (url-decode (or (:page params) (util/get-message :default-page-title request)))
         file-name (str page ".md")
-        repo-path util/content-dir]
+        repo-path (util/content-dir config)]
     (timbre/info (format "Showing history of page '%s'" page))
     (layout/render "history.html"
                    (merge (util/standard-params request)
@@ -163,10 +157,10 @@
 
 (defn upload-page
   "Render a form to allow the upload of a file."
-  [request]
+  [{:keys [smeagol/config] :as request}]
   (let [params (keywordize-keys (:params request))
-        data-path (str util/content-dir "/content/uploads/")
-        git-repo (hist/load-or-init-repo util/content-dir)
+        data-path (str (util/content-dir config) "/content/uploads/")
+        git-repo (hist/load-or-init-repo (util/content-dir config))
         upload (:upload params)
         uploaded (if upload (ul/store-upload params data-path))
         user (session/get :user)
@@ -194,23 +188,23 @@
 
 (defn version-page
   "Render a specific historical version of a page"
-  [request]
+  [{:keys [smeagol/config smeagol/formatters] :as request}]
   (let [params (keywordize-keys (:params request))
         page (url-decode (or (:page params) (util/get-message :default-page-title request)))
         version (:version params)
         file-name (str page ".md")
-        content (hist/fetch-version util/content-dir file-name version)]
+        content (hist/fetch-version (util/content-dir config) file-name version)]
     (timbre/info (format "Showing version '%s' of page '%s'" version page))
     (layout/render "wiki.html"
                    (merge (util/standard-params request)
                           {:title (str (util/get-message :vers-col-hdr request) " " version " " (util/get-message :of request) " "  page)
                            :page page
-                           :content (md->html content)}))))
+                           :content (md->html formatters content)}))))
 
 
 (defn diff-page
   "Render a diff between two versions of a page"
-  [request]
+  [{:keys [smeagol/config] :as request}]
   (let [params (keywordize-keys (:params request))
         page (url-decode (or (:page params) (util/get-message :default-page-title request)))
         version (:version params)
@@ -229,14 +223,13 @@
                              page)
                            :page page
                            :content (d2h/diff2html
-                                      (hist/diff util/content-dir file-name version))}))))
+                                      (hist/diff (util/content-dir config) file-name version))}))))
 
 
 (defn auth-page
   "Render the auth page"
   [request]
   (or
-    (show-sanity-check-error)
     (let [params (keywordize-keys (:form-params request))
           username (:username params)
           password (:password params)
@@ -305,3 +298,25 @@
   (POST "/passwd" request (passwd-page request))
   (GET "/upload" request (route/restricted (upload-page request)))
   (POST "/upload" request (route/restricted (upload-page request))))
+
+
+(defn resolve-map-vals [m]
+  (reduce-kv (fn [m k v]
+               (if-let [v (resolve v)]
+                 (assoc m k (var-get v))
+                 m)) {} m))
+
+;; in order not to rewrite any handler / not turn it to ig key
+(defmethod ig/init-key :smeagol/wiki [_ {:keys [resolver config testing]}]
+  (let [{:keys [formatters]} config
+        resolved-formatters (resolve-map-vals formatters)]
+    {:routes (fn [request]
+               (println {:request request})
+               (show-sanity-check-error config)
+               (-> request
+                   (assoc :smeagol/resolver resolver
+                          :smeagol/formatters (assoc resolved-formatters
+                                                     "test"
+                                                     testing)
+                          :smeagol/config config)
+                   wiki-routes))}))

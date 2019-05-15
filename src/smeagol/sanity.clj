@@ -126,9 +126,7 @@
         #(check-can-read-and-write
            (cjio/file path (str "_" % ".md"))
            %)
-        ["side-bar" "edit-side-bar" "header" ]))))
-  ([]
-   (check-content-dir util/content-dir)))
+        ["side-bar" "edit-side-bar" "header" ])))))
 
 
 (defn check-password-member-field
@@ -224,8 +222,9 @@
     (check-content-dir content-dir)
     (check-config config-path)
     (check-password-file passwd-path)))
-  ([]
-   (check-everything util/content-dir config-file-path password-file-path)))
+  ([config]
+   ;; TODO
+   (check-everything (util/content-dir config) config-file-path password-file-path)))
 
 
 (defn- get-causes
@@ -404,9 +403,9 @@
 
 (defn- raw-sanity-check-installation
   "Actually do the sanity check."
-  []
+  [config]
   (timbre/info "Running sanity check")
-  (let [result (check-everything)]
+  (let [result (check-everything config)]
     (if
       (map? result)
       (do
@@ -424,9 +423,9 @@
 
 (defn show-sanity-check-error
   "Generate an error page in a way which should work even when everything else is broken.
-  If no argument is passed, run the sanity check and if it fails return page contents;
+  If a single argument is passed, run the sanity check and if it fails return page contents;
   if `error` is passed, just return page content describing the error."
-  ([error]
+  ([_ error]
    (let [messages (get-locale-messages)]
      (html
        [:html
@@ -440,13 +439,13 @@
           (as-hiccup error messages)
           (as-hiccup-see-doc messages)]
          (as-hiccup-footer messages)]])))
-  ([]
+  ([config]
    (try
-     (sanity-check-installation)
+     (sanity-check-installation config)
      (catch Exception any
        (timbre/error any "Failure during sanity check")
        (show-sanity-check-error any)))))
 
-(show-sanity-check-error (Exception. "That's insane!"))
+(show-sanity-check-error nil (Exception. "That's insane!"))
 
 

@@ -5,6 +5,7 @@
             [clojure.string :as s]
             [environ.core :refer [env]]
             [noir.io :as io]
+            [integrant.core :as ig]
             [taoensso.timbre :as timbre]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -106,15 +107,12 @@
 
 
 (defn build-config
-  []
+  [file-contents]
   "The actual configuration, as a map. The idea here is that the config
   file is read (if it is specified and present), but that individual
   values can be overridden by environment variables."
   (try
-    (let [file-contents (try
-                          (read-string (slurp config-file-path))
-                          (catch Exception _ {}))
-          config (merge
+    (let [config (merge
                    file-contents
                    (transform-map
                      (from-env-vars
@@ -134,4 +132,11 @@
       (timbre/error any "Could not load configuration")
       {})))
 
-(def config (build-config))
+;; obsolete; use dependency indected insetad of this
+;; (def config (build-config (read-string (slurp config-file-path))))
+(def ^:dynamic config {})
+
+(defmethod ig/init-key :smeagol/configuration [_ legacy-config]
+  (let [config-with-env (build-config legacy-config)]
+    (alter-var-root #'config (constantly config-with-env)) ;; FIXME
+    config-with-env))

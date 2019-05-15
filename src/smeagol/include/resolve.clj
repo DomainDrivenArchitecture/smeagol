@@ -5,6 +5,8 @@ smeagol.include and not inteded for direct usage."
   smeagol.include.resolve
   (:require
     [schema.core :as s]
+    [integrant.core :as ig]
+    [smeagol.util :as util]
     [com.stuartsierra.component :as component]))
 
 (s/defrecord Resolver
@@ -37,6 +39,7 @@ smeagol.include and not inteded for direct usage."
     (s/validate s/Str uri)
     (s/validate s/Str (do-resolve-md resolver uri))))
 
+;; obsolete, use integrant component
 (s/defn
   new-resolver
   ([type :- s/Keyword]
@@ -44,3 +47,7 @@ smeagol.include and not inteded for direct usage."
   ([type :- s/Keyword
     local-base-dir :- s/Str]
    (map->Resolver {:type type :local-base-dir local-base-dir})))
+
+(defmethod ig/init-key :smeagol/resolver [_ {:keys [type config]}]
+  (let [local-base-dir (util/content-dir config)]
+    (map->Resolver {:type type :local-base-dir local-base-dir})))

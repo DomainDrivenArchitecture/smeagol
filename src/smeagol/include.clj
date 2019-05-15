@@ -57,5 +57,5 @@
 
 (s/defn
   new-includer
-  []
-  (map->Includer {}))
+  ([] (map->Includer {}))
+  ([resolver] (map->Includer {:resolver resolver})))

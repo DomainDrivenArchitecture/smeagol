@@ -16,6 +16,7 @@
                  [environ "1.1.0"]
                  [hiccup "1.0.5"]
                  [im.chit/cronj "1.4.4"]
+                 [integrant "0.8.0-alpha2"]
                  [lib-noir "0.9.9" :exclusions [org.clojure/tools.reader]]
                  [markdown-clj "0.9.99" :exclusions [com.keminglabs/cljx]]
                  [noir-exception "0.2.5"]
@@ -56,9 +57,9 @@
   :docker {:image-name "simonbrooke/smeagol"
            :dockerfile "Dockerfile"}
 
-  :ring {:handler smeagol.handler/app
-         :init    smeagol.handler/init
-         :destroy smeagol.handler/destroy}
+  ;; :ring {:handler smeagol.handler/app
+  ;;        :init    smeagol.handler/init
+  ;;        :destroy smeagol.handler/destroy}
 
   :release-tasks [["vcs" "assert-committed"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
@@ -66,7 +67,7 @@
                   ["vcs" "tag" "v." "--no-sign"]
                   ["clean"]
                   ["bower" "install"]
-                  ["ring" "uberjar"]
+                  ;; ["ring" "uberjar"]
                   ["docker" "build"]
                   ["docker" "push"]
                   ["change" "version" "leiningen.release/bump-version"]
@@ -75,15 +76,18 @@
   :profiles {:uberjar {:omit-source true
                        :env {:production true}
                        :aot :all
+                       :main smeagol.main
                        :uberjar-name "smeagol-standalone.jar"}
              :production {:ring {:open-browser? false
                                  :stacktraces?  false
                                  :auto-reload?  false}}
              :dev {:dependencies [[ring-mock "0.1.5"]
+                                  [integrant/repl "0.3.1"]
                                   [ring/ring-devel "1.6.2"]
                                   [pjstadig/humane-test-output "0.8.2"]]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
+                   :source-paths ["dev"]
                    :env {:dev true}}}
 
   :min-lein-version "2.0.0")

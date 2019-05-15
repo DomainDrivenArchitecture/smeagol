@@ -6,8 +6,9 @@
             [cemerick.url :refer (url url-encode url-decode)]
             [clj-yaml.core :as yaml]
             [markdown.core :as md]
-            [smeagol.testing :as testing]
-            [smeagol.configuration :refer [config]]))
+            [taoensso.timbre :as timbre]
+            #_[smeagol.testing :as testing]
+            #_[smeagol.configuration :refer [config]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;
@@ -101,7 +102,7 @@
   (str "<pre class=\"backticks\">```" (.trim text) "\n```</pre>"))
 
 
-(defn process-test
+#_(defn process-test
   "Takes at least 3 lines assuming first is a fn name, last is output, rest inside are arguments"
   [^String text ^Integer index]
   (testing/process text index))
@@ -120,8 +121,9 @@
   `:inclusions`, a map of constructed keywords to inclusion specifications,
   and `:text`, an HTML text string with the keywords present where the
   corresponding inclusion should be inserted."
-  [index result fragment fragments processed]
+  [formatters index result fragment fragments processed]
   (process-text
+    formatters
     (inc index)
     result
     fragments
@@ -136,10 +138,11 @@
   `:inclusions`, a map of constructed keywords to inclusion specifications,
   and `:text`, an HTML text string with the keywords present where the
   corresponding inclusion should be inserted."
-  [index result fragments processed fragment token formatter]
+  [formatters index result fragments processed fragment token formatter]
   (let
     [kw (keyword (str "inclusion-" index))]
     (process-text
+      formatters
       (inc index)
       (assoc-in result [:inclusions kw] (apply formatter (list (subs fragment (count token)) index)))
       (rest fragments)
@@ -155,14 +158,21 @@
   inclusion specifications, and `:text`, an HTML text string with the keywords
   present where the corresponding inclusion should be inserted."
   ([^String text]
-   (process-text 0 {:inclusions {}} (cs/split (or text "") #"```") '()))
+   (process-text {} text))
+  ([formatters ^String text]
+   (process-text formatters 0 {:inclusions {}} (cs/split (or text "") #"```") '()))
   ([index result fragments processed]
+   (process-text {} index result fragments processed))
+  ([formatters index result fragments processed]
    (let [fragment (first fragments)
          ;; if I didn't find a formatter for a back-tick marked fragment,
          ;; I need to put the backticks back in.
          remarked (if (odd? index) (str "```" fragment "\n```") fragment)
          first-token (get-first-token fragment)
-         formatter (eval ((:formatters config) first-token))]
+
+         formatter (formatters first-token)
+         _ (println {:first-token first-token :formatters formatters})
+         ]
      (cond
        (empty? fragments)
        (assoc result :text
@@ -171,9 +181,9 @@
              (cs/join "\n\n" (reverse processed))
              :heading-anchors true)))
        formatter
-       (apply-formatter index result fragments processed fragment first-token formatter)
+       (apply-formatter formatters index result fragments processed fragment first-token formatter)
        true
-       (process-markdown-fragment index result remarked (rest fragments) processed)))))
+       (process-markdown-fragment formatters index result remarked (rest fragments) processed)))))
 
 
 (defn reintegrate-inclusions
@@ -196,7 +206,11 @@
 
 (defn md->html
   "Take this markdown source, and return HTML."
-  [md-src]
-  (reintegrate-inclusions (process-text md-src)))
+  ([md-src]
+   (timbre/warn "Please pass formatters explicitly")
+   (md->html {} md-src))
+  ([formatters md-src]
+   (println {:formatters formatters})
+   (reintegrate-inclusions (process-text formatters md-src))))
 
 
