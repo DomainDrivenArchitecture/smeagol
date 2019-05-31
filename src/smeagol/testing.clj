@@ -2,10 +2,11 @@
   (:require [clojure.string :as string]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [campfire.core :as campfire]
             [aero.core :as aero]
             [integrant.core :as ig]
             [smeagol.configuration :refer [config]]
-            [smeagol.testing.execution :refer [execute]])
+            [smeagol.testing.execution :as execution :refer [execute with-process]])
   (:import [java.io StringReader]
            [clojure.lang LineNumberingPushbackReader]))
 
@@ -67,5 +68,14 @@
       (let [{:keys [result] :as test-result} (do-test params)]
         (str "<pre class=\"test-result " (name result) "\">" (pr-str test-result) "</pre><pre>" text "</pre>")))))
 
+(defn update-map [m f]
+  (reduce-kv (fn [m k v]
+               (assoc m k (f v))) {} m))
+
 (defmethod ig/init-key :smeagol/testing [_ {:keys [test-namespaces]}]
-  (partial process test-namespaces))
+  (let [projects (update-map test-namespaces with-process)]
+    {:testing (partial process test-namespaces)
+     :projects projects}))
+
+(defmethod ig/halt-key! :smeagol/testing [_ {:keys [test-namespaces]}]
+  (update-map (:projects test-namespaces) (comp campfire/halt ::execution/process)))

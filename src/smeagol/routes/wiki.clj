@@ -317,6 +317,6 @@
                    (assoc :smeagol/resolver resolver
                           :smeagol/formatters (assoc resolved-formatters
                                                      "test"
-                                                     testing)
+                                                     (:process testing))
                           :smeagol/config config)
                    wiki-routes))}))

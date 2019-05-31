@@ -103,7 +103,7 @@
       (assoc-in [:security :anti-forgery] xss-protection?)))
 
 
-(defn app [config wiki]
+(defn app [{:keys [config wiki]}]
   (app-handler
     ;; add your application routes here
     [wiki base-routes]
@@ -116,12 +116,15 @@
     ;; serialize/deserialize the following data formats
     ;; available formats:
     ;; :json :json-kw :yaml :yaml-kw :edn :yaml-in-html
+
     :formats [:json-kw :edn :transit-json]))
 
 ;; simulate lein-ring to prefer env var
-(defmethod ig/init-key :smeagol/web [_ {:keys [wiki config port]}]
-  (run-jetty (app config (:routes wiki))
-             {:port (Integer/valueOf (or (System/getenv "port") port)) :join? false}))
+(defmethod ig/init-key :smeagol/web [_ {:keys [port] :as system}]
+  (let [app (app system)]
+    {:app app
+     :http (run-jetty app
+                      {:port (Integer/valueOf (or (System/getenv "port") port)) :join? false})}))
 
-(defmethod ig/halt-key! :smeagol/web [_ server]
-  (.stop server))
+(defmethod ig/halt-key! :smeagol/web [_ {:keys [http]}]
+  (.stop http))

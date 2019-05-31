@@ -6,6 +6,7 @@
   :dependencies [[aero "1.1.3"]
                  [clj-jgit "0.8.10"]
                  [clj-yaml "0.4.0"]
+                 [campfire "0.1.0"]
                  [com.cemerick/url "0.1.1"]
                  [com.fzakaria/slf4j-timbre "0.3.7"]
                  [com.stuartsierra/component "0.3.2"]
@@ -83,6 +84,7 @@
                                  :auto-reload?  false}}
              :dev {:dependencies [[ring-mock "0.1.5"]
                                   [integrant/repl "0.3.1"]
+                                  [juxt/dirwatch "0.2.5"]
                                   [ring/ring-devel "1.6.2"]
                                   [pjstadig/humane-test-output "0.8.2"]]
                    :injections [(require 'pjstadig.humane-test-output)

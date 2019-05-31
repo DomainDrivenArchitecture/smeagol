@@ -1,5 +1,6 @@
 (ns smeagol.testing.execution
   (:require [clojure.edn :as edn]
+            [campfire.core :as campfire]
             [nrepl.core :as nrepl])
   (:import [java.net ConnectException]))
 
@@ -19,6 +20,14 @@
       (catch ConnectException e {:status #{"eval-error"}
                                  :err "Connection refused"}))))
 
+(defn with-process [execution]
+  (let [project (-> execution ::path campfire/detect)
+        process (campfire/process project (::port execution))
+        test-fn (fn [ns-name]
+                  (campfire/eval process
+                                `(do (require (symbol ~ns-name))
+                                     (clojure.test/run-tests (symbol ~ns-name)))))]
+    (assoc execution ::project project ::process process ::test test-fn)))
 
 (defmulti execute ::type)
 
