@@ -76,8 +76,9 @@
 (def get-messages-by-header (memoize raw-get-messages))
 
 (defn get-messages [{:keys [headers smeagol/config] :as request}]
-  (merge (get-messages-by-header (headers "accept-language"))
-         config))
+  (if-let [header (headers "accept-language")]
+    (merge (get-messages-by-header header) config)
+    config))
 
 
 (defn get-message

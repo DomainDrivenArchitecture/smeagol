@@ -74,7 +74,7 @@
 
 (defmethod ig/init-key :smeagol/testing [_ {:keys [test-namespaces]}]
   (let [projects (update-map test-namespaces with-process)]
-    {:testing (partial process test-namespaces)
+    {:process (partial process test-namespaces)
      :projects projects}))
 
 (defmethod ig/halt-key! :smeagol/testing [_ {:keys [test-namespaces]}]

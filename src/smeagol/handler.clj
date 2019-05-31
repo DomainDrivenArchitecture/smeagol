@@ -106,7 +106,7 @@
 (defn app [{:keys [config wiki]}]
   (app-handler
     ;; add your application routes here
-    [wiki base-routes]
+    [(:routes wiki) base-routes]
     ;; add custom middleware here
     :middleware (load-middleware config)
     :ring-defaults (make-defaults true)
@@ -121,10 +121,10 @@
 
 ;; simulate lein-ring to prefer env var
 (defmethod ig/init-key :smeagol/web [_ {:keys [port] :as system}]
-  (let [app (app system)]
+  (let [app (app system)
+        port (or (System/getenv "port") port)]
     {:app app
-     :http (run-jetty app
-                      {:port (Integer/valueOf (or (System/getenv "port") port)) :join? false})}))
+     :http (when port (run-jetty app {:port (Integer/valueOf port) :join? false}))}))
 
 (defmethod ig/halt-key! :smeagol/web [_ {:keys [http]}]
-  (.stop http))
+  (when http (.stop http)))

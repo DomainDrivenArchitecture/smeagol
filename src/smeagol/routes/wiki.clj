@@ -311,7 +311,6 @@
   (let [{:keys [formatters]} config
         resolved-formatters (resolve-map-vals formatters)]
     {:routes (fn [request]
-               (println {:request request})
                (show-sanity-check-error config)
                (-> request
                    (assoc :smeagol/resolver resolver
