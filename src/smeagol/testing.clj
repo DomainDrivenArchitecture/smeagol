@@ -79,3 +79,28 @@
 
 (defmethod ig/halt-key! :smeagol/testing [_ {:keys [test-namespaces]}]
   (update-map (:projects test-namespaces) (comp campfire/halt ::execution/process)))
+
+;; TODO dynamic registration
+;; assumes
+;; 1) protocol on clsp
+;; 2) init/halt fns are on clsp
+(defmethod ig/init-key :smeagol/demo [_ protos]
+  (reduce-kv (fn [m k {:keys [init halt] :as opts}]
+               (let [ns (-> k namespace symbol require)
+                     ctor (resolve init)
+                     destructor (resolve halt)
+                     obj (ctor opts)]
+                 ;; FIXME (satisfies? k obj) raises NPE
+                 #_(assert (satisfies? k obj) (str "opts=" (pr-str opts)
+                                                 " don't satisfy " (pr-str k)))
+                 ;; TODO how to get fns of iface
+                 (assoc m :campfire.project/eval (fn
+                                                   ([x]
+                                                    (campfire.project/eval obj x))
+                                                   ([] (destructor obj))
+                                                   ))
+                 )) {} protos))
+
+(defmethod ig/halt-key! :smeagol/demo [_ fns]
+  (for [[k v] fns]
+    (v)))

@@ -1,6 +1,7 @@
 (ns user
   (:require [smeagol.main :as main]
             [clojure.java.io :as io]
+            [aprint.core :refer :all]
             [juxt.dirwatch :refer [watch-dir close-watcher]]
             [integrant.repl :refer [clear halt go init prep suspend resume reset set-prep!]]
             [integrant.core :as ig])

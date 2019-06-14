@@ -86,7 +86,9 @@
                                   [integrant/repl "0.3.1"]
                                   [juxt/dirwatch "0.2.5"]
                                   [ring/ring-devel "1.6.2"]
+                                  [aprint "0.1.3"]
                                   [pjstadig/humane-test-output "0.8.2"]]
+                   :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000"]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
                    :source-paths ["dev"]
