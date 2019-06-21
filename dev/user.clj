@@ -18,10 +18,6 @@
             #(apply dissoc % [:exception-types])
             (:members (r/reflect x))))))
 
-(defn x [a]
-  (println a)
-  a)
-
 (defn- clj-file? [event]
   (println "event:" (pr-str event))
   (let [^File file (:file event)

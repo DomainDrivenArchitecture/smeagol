@@ -73,15 +73,3 @@
 (defn update-map [m f]
   (reduce-kv (fn [m k v]
                (assoc m k (f v))) {} m))
-
-(defmethod ig/init-key :smeagol/demo [_ opts]
-  (campfire/init opts))
-
-(defmethod ig/halt-key! :smeagol/demo [_ c]
-  (campfire/halt c))
-
-(defmethod ig/suspend-key! :smeagol/demo [_ c]
-  (proj/suspend c))
-
-(defmethod ig/resume-key :smeagol/demo [_ opts old-opts c]
-  (proj/resume c opts old-opts))
