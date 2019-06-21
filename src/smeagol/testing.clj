@@ -1,5 +1,6 @@
 (ns smeagol.testing
   (:require [clojure.string :as string]
+            [clojure.test :as test]
             [com.stuartsierra.component :as component]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
@@ -73,3 +74,10 @@
 (defn update-map [m f]
   (reduce-kv (fn [m k v]
                (assoc m k (f v))) {} m))
+
+(defn run-tests [proc remote-ns]
+  (let [require-code `(require (quote ~remote-ns))
+        test-code `(test/run-tests (quote ~remote-ns))]
+    ;; cannot supply a single form, :(
+    (campfire/eval proc require-code)
+    (campfire/eval proc test-code)))

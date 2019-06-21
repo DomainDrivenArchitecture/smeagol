@@ -6,7 +6,7 @@
   :dependencies [[aero "1.1.3"]
                  [clj-jgit "0.8.10"]
                  [clj-yaml "0.4.0"]
-                 [campfire "0.1.1"]
+                 [campfire "0.1.4"]
                  [com.cemerick/url "0.1.1"]
                  [com.fzakaria/slf4j-timbre "0.3.7"]
                  [com.stuartsierra/component "0.4.0"]
@@ -91,7 +91,8 @@
                    :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000"]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
-                   :source-paths ["dev" "/Users/razum2um/code/campfire/src"]
+                   ;; :source-paths ["dev" "/Users/razum2um/code/campfire/src"]
+                   :source-paths ["dev"]
                    :env {:dev true}}}
 
   :min-lein-version "2.0.0")
