@@ -5,7 +5,7 @@
             [smeagol.handler :refer :all]))
 
 
-(def test-system
+#_(def test-system
   "{:smeagol/resolver {:type :test-mock
                       :config #ig/ref :smeagol/configuration}
 
@@ -17,9 +17,9 @@
    :smeagol/wiki {:resolver #ig/ref :smeagol/resolver
                   :config #ig/ref :smeagol/configuration}}")
 
-(def test-app (-> test-system ig/read-string ig/init :smeagol/web :app))
+#_(def test-app (-> test-system ig/read-string ig/init :smeagol/web :app))
 
-(deftest test-app-ok
+#_(deftest test-app-ok
   (testing "main route"
     (let [response (test-app (request :get "/edit?page=Introduction" {:accept-language "en-GB"}))]
       (is (= 302 (:status response)))

@@ -1,12 +1,14 @@
 (ns smeagol.testing
   (:require [clojure.string :as string]
+            [com.stuartsierra.component :as component]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [campfire.core :as campfire]
+            [campfire.project :as proj]
             [aero.core :as aero]
             [integrant.core :as ig]
             [smeagol.configuration :refer [config]]
-            [smeagol.testing.execution :as execution :refer [execute with-process]])
+            [smeagol.testing.execution :as execution :refer [execute]])
   (:import [java.io StringReader]
            [clojure.lang LineNumberingPushbackReader]))
 
@@ -72,35 +74,14 @@
   (reduce-kv (fn [m k v]
                (assoc m k (f v))) {} m))
 
-(defmethod ig/init-key :smeagol/testing [_ {:keys [test-namespaces]}]
-  (let [projects (update-map test-namespaces with-process)]
-    {:process (partial process test-namespaces)
-     :projects projects}))
+(defmethod ig/init-key :smeagol/demo [_ opts]
+  (campfire/init opts))
 
-(defmethod ig/halt-key! :smeagol/testing [_ {:keys [test-namespaces]}]
-  (update-map (:projects test-namespaces) (comp campfire/halt ::execution/process)))
+(defmethod ig/halt-key! :smeagol/demo [_ c]
+  (campfire/halt c))
 
-;; TODO dynamic registration
-;; assumes
-;; 1) protocol on clsp
-;; 2) init/halt fns are on clsp
-(defmethod ig/init-key :smeagol/demo [_ protos]
-  (reduce-kv (fn [m k {:keys [init halt] :as opts}]
-               (let [ns (-> k namespace symbol require)
-                     ctor (resolve init)
-                     destructor (resolve halt)
-                     obj (ctor opts)]
-                 ;; FIXME (satisfies? k obj) raises NPE
-                 #_(assert (satisfies? k obj) (str "opts=" (pr-str opts)
-                                                 " don't satisfy " (pr-str k)))
-                 ;; TODO how to get fns of iface
-                 (assoc m :campfire.project/eval (fn
-                                                   ([x]
-                                                    (campfire.project/eval obj x))
-                                                   ([] (destructor obj))
-                                                   ))
-                 )) {} protos))
+(defmethod ig/suspend-key! :smeagol/demo [_ c]
+  (proj/suspend c))
 
-(defmethod ig/halt-key! :smeagol/demo [_ fns]
-  (for [[k v] fns]
-    (v)))
+(defmethod ig/resume-key :smeagol/demo [_ opts old-opts c]
+  (proj/resume c opts old-opts))

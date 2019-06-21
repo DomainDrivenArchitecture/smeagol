@@ -6,10 +6,10 @@
   :dependencies [[aero "1.1.3"]
                  [clj-jgit "0.8.10"]
                  [clj-yaml "0.4.0"]
-                 [campfire "0.1.0"]
+                 [campfire "0.1.1"]
                  [com.cemerick/url "0.1.1"]
                  [com.fzakaria/slf4j-timbre "0.3.7"]
-                 [com.stuartsierra/component "0.3.2"]
+                 [com.stuartsierra/component "0.4.0"]
                  [com.taoensso/encore "2.92.0"]
                  [com.taoensso/timbre "4.10.0"]
                  [com.taoensso/tower "3.0.2" :exclusions [com.taoensso/encore]]
@@ -91,7 +91,7 @@
                    :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000"]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
-                   :source-paths ["dev"]
+                   :source-paths ["dev" "/Users/razum2um/code/campfire/src"]
                    :env {:dev true}}}
 
   :min-lein-version "2.0.0")

@@ -310,12 +310,12 @@
 (defmethod ig/init-key :smeagol/wiki [_ {:keys [resolver config testing]}]
   (let [{:keys [formatters]} config
         resolved-formatters (resolve-map-vals formatters)]
-    {:routes (fn [request]
-               (show-sanity-check-error config)
-               (-> request
-                   (assoc :smeagol/resolver resolver
-                          :smeagol/formatters (assoc resolved-formatters
-                                                     "test"
-                                                     (:process testing))
-                          :smeagol/config config)
-                   wiki-routes))}))
+    (fn [request]
+      (show-sanity-check-error config)
+      (-> request
+          (assoc :smeagol/resolver resolver
+                 :smeagol/formatters (assoc resolved-formatters
+                                            "test"
+                                            (:process testing))
+                 :smeagol/config config)
+          wiki-routes))))

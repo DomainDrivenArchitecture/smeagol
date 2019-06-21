@@ -20,7 +20,7 @@
       (catch ConnectException e {:status #{"eval-error"}
                                  :err "Connection refused"}))))
 
-(defn with-process [execution]
+#_(defn with-process [execution]
   (let [project (-> execution ::path campfire/detect)
         process (campfire/process project (::port execution))
         test-fn (fn [ns-name]
