@@ -3,11 +3,13 @@
   :url "https://github.com/simon-brooke/smeagol"
   :license {:name "GNU General Public License,version 2.0 or (at your option) any later version"
             :url "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"}
-  :dependencies [[clj-jgit "0.8.10"]
+  :dependencies [[aero "1.1.3"]
+                 [clj-jgit "0.8.10"]
                  [clj-yaml "0.4.0"]
+                 [campfire "0.1.4"]
                  [com.cemerick/url "0.1.1"]
                  [com.fzakaria/slf4j-timbre "0.3.7"]
-                 [com.stuartsierra/component "0.3.2"]
+                 [com.stuartsierra/component "0.4.0"]
                  [com.taoensso/encore "2.92.0"]
                  [com.taoensso/timbre "4.10.0"]
                  [com.taoensso/tower "3.0.2" :exclusions [com.taoensso/encore]]
@@ -15,11 +17,13 @@
                  [environ "1.1.0"]
                  [hiccup "1.0.5"]
                  [im.chit/cronj "1.4.4"]
+                 [integrant "0.8.0-alpha2"]
                  [lib-noir "0.9.9" :exclusions [org.clojure/tools.reader]]
                  [markdown-clj "0.9.99" :exclusions [com.keminglabs/cljx]]
                  [noir-exception "0.2.5"]
+                 [nrepl "0.6.0"]
                  [org.clojars.simon_brooke/internationalisation "1.0.3"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.10.0"]
                  [org.clojure/core.memoize "0.5.9"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.4.0"]
@@ -37,13 +41,10 @@
 
   :jvm-opts ["-server"]
 
-  :plugins [[lein-ancient "0.5.5" :exclusions [org.clojure/clojure org.clojure/data.xml]]
-            [lein-bower "0.5.1"]
-            [lein-codox "0.10.3"]
-            [io.sarnowski/lein-docker "1.0.0"]
-            [lein-environ "1.0.0"]
-            [lein-marginalia "0.7.1" :exclusions [org.clojure/clojure]]
-            [lein-ring "0.8.13" :exclusions [org.clojure/clojure]]]
+   :plugins [[lein-bower "0.5.1"]
+             [lein-codox "0.10.3"]
+             [lein-environ "1.0.0"]
+             [lein-ring "0.8.13" :exclusions [org.clojure/clojure]]]
 
   :bower-dependencies [[simplemde "1.11.2"]
                        ;; [vega-embed "3.0.0-beta.20"] ;; vega-embed currently not loaded from Bower because of
@@ -72,15 +73,25 @@
 
   :profiles {:uberjar {:omit-source true
                        :env {:production true}
-                       :aot :all}
+                       :aot :all
+                       :main smeagol.main
+                       :uberjar-name "smeagol-standalone.jar"}
              :production {:ring {:open-browser? false
                                  :stacktraces?  false
                                  :auto-reload?  false}}
              :dev {:dependencies [[ring-mock "0.1.5"]
+                                  [integrant/repl "0.3.1"]
+                                  [juxt/dirwatch "0.2.5"]
                                   [ring/ring-devel "1.6.2"]
-                                  [pjstadig/humane-test-output "0.8.2"]]
+                                  [aprint "0.1.3"]
+                                  [pjstadig/humane-test-output "0.9.0"]]
+                   :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000"]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
-                   :env {:dev true}}}
+                   :source-paths ["dev"]
+                   :env {:dev true}}
+             :dev-plugins {:plugins [[lein-ancient "0.6.15" :exclusions [org.clojure/clojure org.clojure/data.xml]]
+                                     [io.sarnowski/lein-docker "1.0.0"]
+                                     [lein-marginalia "0.7.1" :exclusions [org.clojure/clojure]]]}}
 
-  :min-lein-version "2.0.0")
+:min-lein-version "2.4.0")
