@@ -26,24 +26,52 @@
 ;;; environment variables.
 
 ;;      ;       ;       ;       ;       ;       ;       ;       ;       ;
-{
-  :content-dir          "resources/public/content"
-  :start-page           "Introduction"
-                                        ;; where content is served from.
-  :default-locale       "en-GB"         ;; default language used for messages
-  :formatters           {"vega"         smeagol.formatting/process-vega
-                         "vis"          smeagol.formatting/process-vega
-                         "mermaid"      smeagol.formatting/process-mermaid
-                         "backticks"    smeagol.formatting/process-backticks
-                         "test"         smeagol.formatting/process-test}
-  ;; build nREPL jar and run like this:
-  ;; java -cp code.jar:nrepl-0.6.1-SNAPSHOT.jar clojure.main -m nrepl.cmdline -b 127.0.0.1 -p 7888
-  :test-namespaces      {"smeagol.sample" #:smeagol.testing.execution{:type :local}
-                         "smeagol-demo.ttl" #:smeagol.testing.execution{:host "localhost" :port 7888 :type :remote :timeout 1000}
-                         }
-  :log-level            :info           ;; the minimum logging level; one of
-                                        ;; :trace :debug :info :warn :error :fatal
-  :passwd               "resources/passwd"
-                                        ;; where the password file is stored
-  :site-title           "Smeagol"}       ;; overall title of the site, used in
-                                        ;; page headings
+{:smeagol/web {:wiki #ig/ref :smeagol/wiki
+               :config #ig/ref :smeagol/configuration
+               :port 3000}
+ :smeagol/routes {:wiki #ig/ref :smeagol/wiki
+                  :smeagol/demo #ig/ref :smeagol/demo
+                  :config #ig/ref :smeagol/configuration}
+ :smeagol/resolver {:type :local-file
+                    :config #ig/ref :smeagol/configuration}
+
+ :smeagol/configuration {:content-dir          "/Users/razum2um/code/dda" ;; where content is served from.
+                         :default-locale       "en-GB"         ;; default language used for messages
+                         :log-level            :info           ;; the minimum logging level; one of :trace :debug :info :warn :error :fatal
+                         :passwd               "/Users/razum2um/code/smeagol/passwd" ;; where the password file is stored
+                         :site-title           "Smeagol"       ;; overall title of the site, used in page headings
+                         :formatters           {"vega"         smeagol.formatting/process-vega
+                                                "vis"          smeagol.formatting/process-vega
+                                                "mermaid"      smeagol.formatting/process-mermaid
+                                                "backticks"    smeagol.formatting/process-backticks
+                                                ;; "test"         smeagol.formatting/process-test
+                                                }}
+
+ :smeagol/demo #:campfire.core{:port 7878
+                               :path "smeagol-demo"}
+ :smeagol/serverspec #:campfire.core{:port 7879
+                               :path "dda-serverspec-crate"}
+ #_{:campfire.core/host "localhost"
+  :campfire.core/port 7878
+  :campfire.core/timeout 10000
+  :campfire.core/path "/Users/razum2um/code/smeagol-demo"}
+ ;; :smeagol/demo {campfire.project/Evaluable {:init campfire.core/init
+ ;;                                             :halt campfire.core/halt
+ ;;                                             :campfire.core/host "localhost"
+ ;;                                             :campfire.core/port 7878
+ ;;                                             :campfire.core/type :remote
+ ;;                                             :campfire.core/timeout 1000
+ ;;                                             :campfire.core/path "/Users/razum2um/code/smeagol-demo"}}
+
+ :smeagol/wiki {:resolver #ig/ref :smeagol/resolver
+                :config #ig/ref :smeagol/configuration
+                ;; :testing #ig/ref :smeagol/testing
+                ;; :vega #ig/ref :smeagl/vega
+                }
+ ;; :smegogol/vega {}
+ ;; :smeagol/testing {:config #ig/ref :smeagol/configuration
+ ;;                   :test-namespaces      {;;"smeagol.sample" #:smeagol.testing.execution{:type :local}
+ ;;                                          "smeagol-demo.ttl" #:smeagol.testing.execution{:host "localhost" :port 8787 :type :remote :timeout 1000 :path "/Users/razum2um/code/smeagol-demo"}
+ ;;                                          }}
+ }
+
