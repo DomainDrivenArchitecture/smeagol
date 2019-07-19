@@ -82,12 +82,20 @@
              :production {:ring {:open-browser? false
                                  :stacktraces?  false
                                  :auto-reload?  false}}
+             :test {:dependencies [[pjstadig/humane-test-output "0.9.0"]]
+                    :injections [(require 'pjstadig.humane-test-output)
+                                 (pjstadig.humane-test-output/activate!)]}
              :dev {:dependencies [[ring-mock "0.1.5"]
                                   [integrant/repl "0.3.1"]
                                   [juxt/dirwatch "0.2.5"]
                                   [ring/ring-devel "1.6.2"]
                                   [aprint "0.1.3"]
-                                  [pjstadig/humane-test-output "0.8.2"]]
+                                  [cljsh "0.1.0-SNAPSHOT"]
+                                  [razum2um/rebel-readline "0.1.6-SNAPSHOT"]
+                                  [org.clojure/tools.namespace "0.3.0"]
+                                  [com.rpl/specter "1.1.2"]
+                                  [org.clojure/tools.trace "0.7.10"]
+                                  [pjstadig/humane-test-output "0.9.0"]]
                    :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000"]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]

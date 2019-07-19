@@ -141,10 +141,11 @@ You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above
 You will need [node](https://nodejs.org/en/) and [bower](https://bower.io/) installed.
 
 ## Running
-To start a web server for the application, run:
+To start a web server for the application inside the REPL, run:
 
     lein bower install
-    lein ring server
+    lein trampoline run -m rebel-readline.main
+    => (reset)
 
 Alternatively, if you want to deploy to a servlet container (which I would strongly recommend), the simplest thing is to run:
 
