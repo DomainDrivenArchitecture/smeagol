@@ -2,6 +2,7 @@
       :author "Simon Brooke"}
   smeagol.util
   (:require [clojure.java.io :as cjio]
+            [clojure.string :as string]
             [environ.core :refer [env]]
             [noir.io :as io]
             [noir.session :as session]
@@ -39,9 +40,11 @@
   (:start-page  config))
 
 (defn content-dir [config]
-  (or
-    (:content-dir config)
-    (cjio/file (io/resource-path) "content")))
+  (if-let [dir (:content-dir config)]
+    (if (string/starts-with? dir "/")
+      dir
+      (cjio/file (cjio/resource dir)))
+    (cjio/file (cjio/resource "public/content"))))
 
 
 (defn standard-params
