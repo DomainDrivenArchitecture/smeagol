@@ -26,16 +26,14 @@
 ;;; environment variables.
 
 ;;      ;       ;       ;       ;       ;       ;       ;       ;       ;
-{:smeagol/web {:wiki #ig/ref :smeagol/wiki
-               :config #ig/ref :smeagol/configuration
+{:smeagol/web {:routes #ig/ref :smeagol/routes
                :port 3000}
  :smeagol/routes {:wiki #ig/ref :smeagol/wiki
-                  :smeagol/demo #ig/ref :smeagol/demo
                   :config #ig/ref :smeagol/configuration}
  :smeagol/resolver {:type :local-file
                     :config #ig/ref :smeagol/configuration}
 
- :smeagol/configuration {:content-dir          "public/content" ;; where content is served from.
+ :smeagol/configuration {:content-dir          "public/content" ;; where content is served from
                          :default-locale       "en-GB"          ;; default language used for messages
                          :log-level            :info            ;; the minimum logging level; one of :trace :debug :info :warn :error :fatal
                          :passwd               "passwd"         ;; where the password file is stored
