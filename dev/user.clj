@@ -18,7 +18,7 @@
             #(apply dissoc % [:exception-types])
             (:members (r/reflect x))))))
 
-(defn- clj-file? [event]
+#_(defn- clj-file? [event]
   (println "event:" (pr-str event))
   (let [^File file (:file event)
         path (.getAbsolutePath file)]
@@ -31,15 +31,16 @@
   (binding [*ns* (find-ns 'user)]
     (reset)))
 
-(defmethod ig/init-key :watch [_ _]
+#_(defmethod ig/init-key :watch [_ _]
   (let [pwd (io/file "src")]
     (println (str "Watching: " (.getAbsolutePath pwd)))
     #_(watch-dir println pwd)
     (watch-dir #(when (clj-file? %) (do-reset %)) pwd)))
 
-(defmethod ig/halt-key! :watch [_ w] (close-watcher w))
+#_(defmethod ig/halt-key! :watch [_ w] (close-watcher w))
 
-(set-prep! #(assoc (main/read-config nil) :watch {}))
+#_(set-prep! #(assoc (main/read-config nil) :watch {}))
+(set-prep! #(main/read-config nil))
 
 (println "System: #'integrant.repl.state/system")
 (println "Run with (reset)")
