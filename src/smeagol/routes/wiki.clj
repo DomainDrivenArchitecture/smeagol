@@ -308,14 +308,15 @@
 
 ;; in order not to rewrite any handler / not turn it to ig key
 (defmethod ig/init-key :smeagol/wiki [_ {:keys [resolver config testing]}]
-  (let [{:keys [formatters]} config
+  (let [{:keys [formatters passwd]} config
         resolved-formatters (resolve-map-vals formatters)]
     (fn [request]
-      (show-sanity-check-error config)
-      (-> request
-          (assoc :smeagol/resolver resolver
-                 :smeagol/formatters (assoc resolved-formatters
-                                            "test"
-                                            (:process testing))
-                 :smeagol/config config)
-          wiki-routes))))
+      (binding [auth/password-file-path passwd]
+        (show-sanity-check-error config)
+        (-> request
+            (assoc :smeagol/resolver resolver
+                   :smeagol/formatters (assoc resolved-formatters
+                                              "test"
+                                              (:process testing))
+                   :smeagol/config config)
+            wiki-routes)))))

@@ -35,10 +35,11 @@
 ;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 ;; the relative path to the password file.
-(def password-file-path
+(def ^:dynamic password-file-path
   (or
-    (:passwd config)
+    (:passwd config) ;; Romove me or pass config along
     (str (io/resource-path) "../passwd")))
 
 
