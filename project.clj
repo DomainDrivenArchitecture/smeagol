@@ -96,7 +96,7 @@
                                   [com.rpl/specter "1.1.2"]
                                   [org.clojure/tools.trace "0.7.10"]
                                   [pjstadig/humane-test-output "0.9.0"]]
-                   :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000"]
+                   ;; :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000"]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
                    :source-paths ["dev"]
