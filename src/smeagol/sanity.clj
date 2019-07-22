@@ -444,7 +444,7 @@
      (sanity-check-installation config)
      (catch Exception any
        (timbre/error any "Failure during sanity check")
-       (show-sanity-check-error any)))))
+       (show-sanity-check-error nil any)))))
 
 (show-sanity-check-error nil (Exception. "That's insane!"))
 
