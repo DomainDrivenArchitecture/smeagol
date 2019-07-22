@@ -170,9 +170,7 @@
          remarked (if (odd? index) (str "```" fragment "\n```") fragment)
          first-token (get-first-token fragment)
 
-         formatter (formatters first-token)
-         _ (println {:first-token first-token :formatters formatters})
-         ]
+         formatter (formatters first-token)]
      (cond
        (empty? fragments)
        (assoc result :text
@@ -210,7 +208,6 @@
    (timbre/warn "Please pass formatters explicitly")
    (md->html {} md-src))
   ([formatters md-src]
-   (println {:formatters formatters})
    (reintegrate-inclusions (process-text formatters md-src))))
 
 
