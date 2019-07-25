@@ -43,20 +43,20 @@
     (handler req)))
 
 
-(def development-middleware
+(defn development-middleware [_config]
   [wrap-error-page
    wrap-exceptions])
 
 
-(def production-middleware
+(defn production-middleware [config]
   [#(wrap-internal-error % :log (fn [e] (timbre/error e)))
    #(wrap-resource % "public")
-   #(wrap-file % util/content-dir
+   #(wrap-file % (util/content-dir config)
                {:index-files? false :prefer-handler? true})
    #(wrap-content-type %)
    #(wrap-not-modified %)])
 
 
-(defn load-middleware []
-  (concat (when (env :dev) development-middleware)
-          production-middleware))
+(defn load-middleware [config]
+  (concat (when (env :dev) (development-middleware config))
+          (production-middleware config)))

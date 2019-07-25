@@ -7,13 +7,15 @@
             [compojure.route :as route]
             [cronj.core :as cronj]
             [environ.core :refer [env]]
+            [integrant.core :as ig]
             [noir.response :refer [redirect]]
             [noir.session :as session]
             [noir.util.middleware :refer [app-handler]]
             [ring.middleware.defaults :refer [site-defaults]]
+            [ring.adapter.jetty :refer [run-jetty]]
             [selmer.parser :as parser]
             [smeagol.configuration :refer [config]]
-            [smeagol.routes.wiki :refer [wiki-routes]]
+            ;; [smeagol.routes.wiki :refer [wiki-routes]]
             [smeagol.middleware :refer [load-middleware]]
             [smeagol.session-manager :as session-manager]
             [taoensso.timbre :as timbre]
@@ -101,11 +103,12 @@
       (assoc-in [:security :anti-forgery] xss-protection?)))
 
 
-(def app (app-handler
+(defn app [{:keys [config wiki]}]
+  (app-handler
     ;; add your application routes here
-    [wiki-routes base-routes]
+    [wiki base-routes]
     ;; add custom middleware here
-    :middleware (load-middleware)
+    :middleware (load-middleware config)
     :ring-defaults (make-defaults true)
     ;; add access rules here
     :access-rules [{:redirect "/auth"
@@ -113,4 +116,16 @@
     ;; serialize/deserialize the following data formats
     ;; available formats:
     ;; :json :json-kw :yaml :yaml-kw :edn :yaml-in-html
+
     :formats [:json-kw :edn :transit-json]))
+
+(defmethod ig/init-key :smeagol/routes [_ system]
+  (app system))
+
+;; simulate lein-ring to prefer env var
+(defmethod ig/init-key :smeagol/web [_ {:keys [routes port]}]
+  (let [port (Integer/valueOf (or (System/getenv "port") port))]
+    (run-jetty routes {:port port :join? false})))
+
+(defmethod ig/halt-key! :smeagol/web [_ http]
+  (when http (.stop http)))

@@ -6,9 +6,10 @@
   :dependencies [[aero "1.1.3"]
                  [clj-jgit "0.8.10"]
                  [clj-yaml "0.4.0"]
+                 [campfire "0.1.5-SNAPSHOT"]
                  [com.cemerick/url "0.1.1"]
                  [com.fzakaria/slf4j-timbre "0.3.7"]
-                 [com.stuartsierra/component "0.3.2"]
+                 [com.stuartsierra/component "0.4.0"]
                  [com.taoensso/encore "2.92.0"]
                  [com.taoensso/timbre "4.10.0"]
                  [com.taoensso/tower "3.0.2" :exclusions [com.taoensso/encore]]
@@ -16,12 +17,13 @@
                  [environ "1.1.0"]
                  [hiccup "1.0.5"]
                  [im.chit/cronj "1.4.4"]
+                 [integrant "0.8.0-alpha2"]
                  [lib-noir "0.9.9" :exclusions [org.clojure/tools.reader]]
                  [markdown-clj "0.9.99" :exclusions [com.keminglabs/cljx]]
                  [noir-exception "0.2.5"]
                  [nrepl "0.6.0"]
                  [org.clojars.simon_brooke/internationalisation "1.0.3"]
-                 [org.clojure/clojure "1.10.0"]
+                 [org.clojure/clojure "1.10.1"]
                  [org.clojure/core.memoize "0.5.9"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.4.0"]
@@ -56,9 +58,9 @@
   :docker {:image-name "simonbrooke/smeagol"
            :dockerfile "Dockerfile"}
 
-  :ring {:handler smeagol.handler/app
-         :init    smeagol.handler/init
-         :destroy smeagol.handler/destroy}
+  ;; :ring {:handler smeagol.handler/app
+  ;;        :init    smeagol.handler/init
+  ;;        :destroy smeagol.handler/destroy}
 
   :release-tasks [["vcs" "assert-committed"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
@@ -66,7 +68,7 @@
                   ["vcs" "tag" "v." "--no-sign"]
                   ["clean"]
                   ["bower" "install"]
-                  ["ring" "uberjar"]
+                  ;; ["ring" "uberjar"]
                   ["docker" "build"]
                   ["docker" "push"]
                   ["change" "version" "leiningen.release/bump-version"]
@@ -75,15 +77,29 @@
   :profiles {:uberjar {:omit-source true
                        :env {:production true}
                        :aot :all
+                       :main smeagol.main
                        :uberjar-name "smeagol-standalone.jar"}
              :production {:ring {:open-browser? false
                                  :stacktraces?  false
                                  :auto-reload?  false}}
+             :test {:dependencies [[pjstadig/humane-test-output "0.9.0"]]
+                    :injections [(require 'pjstadig.humane-test-output)
+                                 (pjstadig.humane-test-output/activate!)]}
              :dev {:dependencies [[ring-mock "0.1.5"]
+                                  [integrant/repl "0.3.1"]
+                                  [juxt/dirwatch "0.2.5"]
                                   [ring/ring-devel "1.6.2"]
-                                  [pjstadig/humane-test-output "0.8.2"]]
+                                  [aprint "0.1.3"]
+                                  [cljsh "0.1.0-SNAPSHOT"]
+                                  [razum2um/rebel-readline "0.1.6-SNAPSHOT"]
+                                  [org.clojure/tools.namespace "0.3.0"]
+                                  [com.rpl/specter "1.1.2"]
+                                  [org.clojure/tools.trace "0.7.10"]
+                                  [pjstadig/humane-test-output "0.9.0"]]
+                   ;; :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000"]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
+                   :source-paths ["dev"]
                    :env {:dev true}}}
 
   :min-lein-version "2.0.0")

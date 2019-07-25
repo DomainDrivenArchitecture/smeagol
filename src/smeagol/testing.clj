@@ -1,10 +1,15 @@
 (ns smeagol.testing
   (:require [clojure.string :as string]
+            [clojure.test :as test]
+            [com.stuartsierra.component :as component]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [campfire.core :as campfire]
+            [campfire.project :as proj]
             [aero.core :as aero]
+            [integrant.core :as ig]
             [smeagol.configuration :refer [config]]
-            [smeagol.testing.execution :refer [execute]])
+            [smeagol.testing.execution :as execution :refer [execute]])
   (:import [java.io StringReader]
            [clojure.lang LineNumberingPushbackReader]))
 
@@ -51,17 +56,28 @@
           {:fn-name fn-name :out out :in in :text text})))))
 
 
-(defn whitelist-namespace [{:keys [fn-name] :as params}]
+(defn whitelist-namespace [test-namespaces {:keys [fn-name] :as params}]
   (let [ns-name (namespace fn-name)]
-    (if-let [ns-config (-> config :test-namespaces (get ns-name))]
+    (if-let [ns-config (-> test-namespaces (get ns-name))]
       (merge ns-config params)
-      {:error (str "Namespace: " (pr-str ns-name) " is not listed: "
-                   (-> config :test-namespaces keys))})))
+      {:error (str "Namespace/Var: " (pr-str ns-name) " is not listed: "
+                   (-> test-namespaces keys))})))
 
 
-(defn process [^String text ^Integer index]
-  (let [{:keys [error] :as params} (-> text parse whitelist-namespace)]
+(defn process [test-namespaces ^String text ^Integer index]
+  (let [{:keys [error] :as params} (-> text parse (partial whitelist-namespace test-namespaces))]
     (if error
       (str "<pre class=\"test-result error\">" (pr-str params) "</pre><pre>" text "</pre>")
       (let [{:keys [result] :as test-result} (do-test params)]
         (str "<pre class=\"test-result " (name result) "\">" (pr-str test-result) "</pre><pre>" text "</pre>")))))
+
+(defn update-map [m f]
+  (reduce-kv (fn [m k v]
+               (assoc m k (f v))) {} m))
+
+(defn run-tests [proc remote-ns]
+  (let [require-code `(require (quote ~remote-ns))
+        test-code `(test/run-tests (quote ~remote-ns))]
+    ;; cannot supply a single form, :(
+    (campfire/eval proc require-code)
+    (campfire/eval proc test-code)))

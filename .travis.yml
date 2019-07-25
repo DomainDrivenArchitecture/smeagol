@@ -24,7 +24,7 @@ jobs:
       script:
         - lein test
         - lein bower install
-        - lein ring uberjar
+        - lein uberjar
         - md5sum target/smeagol-standalone.jar > target/smeagol-standalone.jar.md5
       deploy:
         - provider: releases
