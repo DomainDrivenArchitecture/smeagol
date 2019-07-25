@@ -88,6 +88,14 @@ To add your own formatter, compile it into a jar file which is on the classpath 
 
 The added key should be the word which will follow the opening three backticks of your code block, and the value of that key should be a symbol which evaluates to a function which can format the code block as required.
 
+## Execute Tests
+
+```clojure
+(require 'smeagol.testing)
+
+(smeagol.testing/run-tests (-> integrant.repl.state/system :smeagol/demo) 'smeagol-demo.ttl-test)
+```
+
 ## Security and authentication
 Security is now greatly improved. There is a file called *passwd* in the *resources* directory, which contains a clojure map which maps usernames to maps with plain-text passwords and emails thus:
 
